@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.room.Room
 import com.example.criminalintent.database.CrimeDatabase
+import com.example.criminalintent.database.migration_1_2
+import java.io.File
 import java.util.*
 import java.util.concurrent.Executors
 
@@ -16,10 +18,12 @@ class CrimeRepository private constructor(context: Context) {
         context.applicationContext,
         CrimeDatabase::class.java,
         DATABASE_NAME
-    ).build()
+        ).addMigrations(migration_1_2)
+        .build()
 
     private val crimeDAO = database.crimeDao()
     private val executor = Executors.newSingleThreadExecutor()
+    private val filesDir = context.applicationContext.filesDir
 
     fun getCrimes(): LiveData<List<Crime>> = crimeDAO.getCrimes()
     fun getCrime(id : UUID): LiveData<Crime?> = crimeDAO.getCrime(id)
@@ -33,6 +37,8 @@ class CrimeRepository private constructor(context: Context) {
             crimeDAO.addCrime(crime)
         }
     }
+
+    fun getPhotoFile(crime: Crime) : File = File(filesDir, crime.photoFileName)
 
     companion object{
         private var INSTANCE: CrimeRepository? = null
